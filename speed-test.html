@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Typing Speed Test</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: #17A2B8;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+    }
+    .wrapper {
+      background: #fff;
+      padding: 30px;
+      border-radius: 10px;
+      width: 700px;
+      box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+    }
+    .quote {
+      font-size: 1.2rem;
+      margin-bottom: 20px;
+      line-height: 1.6;
+    }
+    .quote span.correct { color: green; }
+    .quote span.incorrect { color: red; text-decoration: underline; }
+    .quote span.active { border-bottom: 2px solid #17A2B8; }
+    textarea {
+      width: 100%;
+      height: 100px;
+      font-size: 1.1rem;
+      padding: 10px;
+      margin-top: 10px;
+    }
+    .stats {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 15px;
+    }
+    .stats div {
+      background: #f1f1f1;
+      padding: 10px;
+      border-radius: 6px;
+      width: 30%;
+      text-align: center;
+    }
+    button {
+      margin-top: 20px;
+      padding: 10px 20px;
+      background: #007bff;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <div class="wrapper">
+    <h2>⌨️ Typing Speed Test</h2>
+    <div class="quote" id="quote"></div>
+    <textarea id="input" placeholder="Start typing here..." oninput="processInput()" onfocus="startTest()"></textarea>
+    <div class="stats">
+      <div><strong>Time Left:</strong> <span id="time">60</span>s</div>
+      <div><strong>WPM:</strong> <span id="wpm">0</span></div>
+      <div><strong>Errors:</strong> <span id="errors">0</span></div>
+    </div>
+    <button onclick="resetTest()">Try Again</button>
+  </div>
+
+  <script>
+    const quotes = [
+      "Push yourself, because no one else is going to do it for you.",
+      "Wake up with determination. Go to bed with satisfaction.",
+      "Learning never exhausts the mind.",
+      "The only way to do great work is to love what you do."
+    ];
+
+    let quoteIndex = 0;
+    let timeLeft = 60;
+    let timer = null;
+    let charIndex = 0;
+    let errors = 0;
+    let isRunning = false;
+
+    const quoteEl = document.getElementById("quote");
+    const inputEl = document.getElementById("input");
+    const timeEl = document.getElementById("time");
+    const wpmEl = document.getElementById("wpm");
+    const errorsEl = document.getElementById("errors");
+
+    function loadQuote() {
+      quoteEl.innerHTML = "";
+      const quote = quotes[quoteIndex].split("");
+      quote.forEach(char => {
+        const span = document.createElement("span");
+        span.textContent = char;
+        quoteEl.appendChild(span);
+      });
+      quoteEl.querySelector("span").classList.add("active");
+    }
+
+    function startTest() {
+      if (!isRunning) {
+        isRunning = true;
+        timer = setInterval(() => {
+          if (timeLeft > 0) {
+            timeLeft--;
+            timeEl.textContent = timeLeft;
+            const wpm = Math.round((charIndex - errors) / 5 / (60 - timeLeft) * 60);
+            wpmEl.textContent = wpm > 0 ? wpm : 0;
+          } else {
+            clearInterval(timer);
+            inputEl.disabled = true;
+          }
+        }, 1000);
+      }
+    }
+
+    function processInput() {
+      const input = inputEl.value.split("");
+      const quoteSpans = quoteEl.querySelectorAll("span");
+      charIndex = input.length;
+      errors = 0;
+
+      quoteSpans.forEach((span, i) => {
+        const typedChar = input[i];
+        span.classList.remove("correct", "incorrect", "active");
+
+        if (typedChar == null) {
+          // do nothing
+        } else if (typedChar === span.textContent) {
+          span.classList.add("correct");
+        } else {
+          span.classList.add("incorrect");
+          errors++;
+        }
+
+        if (i === input.length) {
+          span.classList.add("active");
+        }
+      });
+
+      errorsEl.textContent = errors;
+
+      if (input.length === quoteSpans.length) {
+        quoteIndex = (quoteIndex + 1) % quotes.length;
+        inputEl.value = "";
+        loadQuote();
+      }
+    }
+
+    function resetTest() {
+      clearInterval(timer);
+      timeLeft = 60;
+      charIndex = 0;
+      errors = 0;
+      isRunning = false;
+      inputEl.disabled = false;
+      inputEl.value = "";
+      timeEl.textContent = "60";
+      wpmEl.textContent = "0";
+      errorsEl.textContent = "0";
+      loadQuote();
+    }
+
+    window.onload = loadQuote;
+  </script>
+</body>
+</html>
